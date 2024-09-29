@@ -2,6 +2,7 @@ import sys, pygame, time, os
 import ctypes, easygui
 from pygame.locals import *
 from constants import *
+from models import Menu, Map
 
 pygame.init()
 clock = pygame.time.Clock()
@@ -9,134 +10,16 @@ display = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption(TITLE)
 
 
-def create_new_map(value_width=50, value_height=50):
-    with open("maps/map1.txt", "w") as f:
-        row = " ".join(["0" for x in range(value_width)]) + "\n"
-        f.write(row)
-        for y in range(value_height - 2):
-            row = "0 " + " ".join(["1" for x in range(value_width - 2)]) + " 0\n"
-            f.write(row)
-        row = " ".join(["0" for x in range(value_width)]) + "\n"
-        f.write(row)
 
+tiles_images = os.listdir(PATH_TILES)
 
-def create_new_bottom_layer(value_width = 50, value_height = 50):
-    with open("maps/layer1.txt", "w") as f:
-        row = " ".join(["0" for x in range(value_width)]) + "\n"
-        f.write(row)
-        for y in range(value_height - 2):
-            row = "0 " + " ".join(["-1" for x in range(value_width - 2)]) + " 0\n"
-            f.write(row)
-        row = " ".join(["0" for x in range(value_width)]) + "\n"
-        f.write(row)
+tiles = [pygame.image.load(os.path.join(PATH_TILES, tile)) for tile in tiles_images]
+menu = Menu(display, tiles)
 
-def import_map():
-    with open("maps/map1.txt", "r") as f:
-        rows = []
-        lines = f.readlines()
-        for line in lines:
-            row = line.replace("\n", "").split()
-            row = [int(x) for x in row]
-            rows.append(row)
-        return rows
-
-
-def import_bottom_layer():
-    with open("maps/layer1.txt", "r") as f:
-        rows = []
-        lines = f.readlines()
-        for line in lines:
-            row = line.replace("\n", "").split()
-            row = [int(x) for x in row]
-            rows.append(row)
-        return rows
-
-
-def export_map(g_map):
-    with open("maps/map1.txt", "w") as f:
-        for row in g_map:
-            f.write(" ".join([str(x) for x in row]) + "\n")
-
-
-def export_bottom_layer(g_map):
-    with open("maps/layer1.txt", "w") as f:
-        for row in g_map:
-            f.write(" ".join([str(x) for x in row]) + "\n")
-
-
-def import_tiles():
-    tiles = []
-    tiles_images = os.listdir("assets/Tiles")
-    for tile in tiles_images:
-        image = os.path.join("assets/Tiles/", tile)
-        image = pygame.image.load(image)
-        tiles.append(image)
-    return tiles
-
-
-def draw_map(g_map, tiles, move_x, move_y):
-    for y in range(len(g_map)):
-        for x in range(len(g_map[y])):
-            left = move_x + x * 32
-            top = move_y + y * 32
-            if g_map[y][x] != -1:
-                tile = tiles[g_map[y][x]]
-                display.blit(tile, pygame.Rect(left, top, 32, 32))
-
-
-def draw_menu(tiles, procrutka = 0):
-    #pygame.draw.rect(display, (242, 194, 126, 128), (30, 30, 740, 540), border_radius=4)
-
-    window_bg = pygame.Surface((740, 540))  # the size of your rect
-    window_bg.set_alpha(200)                # alpha level
-    window_bg.fill((74, 58, 35))           # this fills the entire surface
-    display.blit(window_bg, (30, 30))    # (0,0) are the top-left coordinates
-
-    for i in range(procrutka, 14 + procrutka):
-        part_tiles = tiles[i * 19:(i + 1) * 19]
-        for x, tile in enumerate(part_tiles):
-            left = 52 + x * 32 + x * 5
-            top = 52 + (i - procrutka) * 32 + (i - procrutka) * 5
-            display.blit(tile, pygame.Rect(left, top, 32, 32))
-
-
-def create_invisible_tiles():
-    count_tiles = len(os.listdir("assets/Tiles"))
-    tiles = [x for x in range(count_tiles)]
-    blocks = []
-
-    for i in range(count_tiles // 19 + 1):
-        part_tiles = tiles[i * 19:(i + 1) * 19]
-        for x, tile in enumerate(part_tiles):
-            left = 52 + x * 32 + x * 5
-            top = 52 + i * 32 + i * 5
-            blocks.append(pygame.Rect(left, top, 32, 32))
-    return blocks
-
-
-
-
-
-
-
-
-
-
-#create_new_bottom_layer()
-
-g_map = import_map()
-layer = import_bottom_layer()
-tiles = import_tiles()
-move_x = 0
-move_y = 0
-
-invisible_tiles = create_invisible_tiles()
 mouse_pos = pygame.mouse.get_pos()
-choosed_tile = 0
-choosed_layer = 1
+#choosed_tile = 0
 opened_menu = True
 
-#layer_text
 layer_font = pygame.font.SysFont('Arial', 16)
 common_text = {
     0: "BOTTOM LAYER",
@@ -147,7 +30,6 @@ mouse = False
 
 x_pos, y_pos = 0, 0
 mode = MENU
-#font and buttons
 btn_font = pygame.font.Font('fonts/Accuratist.otf', 30)
 btn_new = pygame.Rect(300, 300, 200, 50)
 btn_new_text = btn_font.render("Create new map", True, BLACK)
@@ -209,6 +91,7 @@ btn_create_text_rect.center = btn_create.center
 
 
 
+board = Map(display)
 
 while True:
     display.fill(WHITE)
@@ -220,18 +103,18 @@ while True:
         display.blit(btn_continue_text, btn_continue_text_rect)
     elif mode == SETTINGS:
         display.fill(BG_MENU)
-        draw_input_width(int(value_width))
-        draw_input_height(int(value_height))
+        draw_input_width(board.width)
+        draw_input_height(board.height)
         pygame.draw.rect(display, BG_MENU_BTN, btn_create, border_radius=10)
         display.blit(btn_create_text, btn_create_text_rect)
     elif mode == EDITOR:
-        draw_map(layer, tiles, move_x, move_y)
-        draw_map(g_map, tiles, move_x, move_y)
+        board.draw(tiles)
         pygame.draw.rect(display, RED, (12, 500, 85, 85), border_radius=5)
-        display.blit(pygame.transform.scale(tiles[choosed_tile], (64, 64)), pygame.Rect(25, 510, 64, 64))
+        display.blit(pygame.transform.scale(tiles[board.choosed_tile], (64, 64)), pygame.Rect(25, 510, 64, 64))
         if opened_menu:
-            draw_menu(tiles, swipe)
-        layer_text_surface = layer_font.render(f"Choosed Layer: {common_text.get(choosed_layer)}", True, BLACK)
+            # draw_menu(tiles, swipe)
+            menu.draw(swipe)
+        layer_text_surface = layer_font.render(f"Choosed Layer: {common_text.get(board.choosed_layer)}", True, BLACK)
         display.blit(layer_text_surface, (100, 570))
     for event in pygame.event.get():
 
@@ -240,12 +123,11 @@ while True:
         if event.type == KEYDOWN:
             if mode == EDITOR:
                 if event.key == K_RIGHT:
-                    choosed_layer = 1
+                    board.choosed_layer = 1
                 elif event.key == K_LEFT:
-                    choosed_layer = 0
+                    board.choosed_layer = 0
                 elif event.key == K_2:
-                    export_map(g_map)
-                    export_bottom_layer(layer)
+                    board.export_map()
                 elif event.key == K_SPACE:
                     opened_menu = True
                 elif event.key == K_ESCAPE:
@@ -321,10 +203,10 @@ while True:
         if event.type == MOUSEBUTTONDOWN and event.type != MOUSEWHEEL:
             if opened_menu and mode == EDITOR:
                 rect = pygame.Rect(x_pos, y_pos, 1, 1)
-                index = rect.collidelist(invisible_tiles)
+                index = rect.collidelist(menu.invisible_rects)
                 if index != -1:
                     if index + 19 * swipe < len(tiles):
-                        choosed_tile = index + 19 * swipe
+                        board.choosed_tile = index + 19 * swipe
                         opened_menu = False
                     break
             if not opened_menu and mode == EDITOR:
@@ -333,10 +215,9 @@ while True:
                     mouse = False
                     opened_menu = True
             if mode == MENU and btn_continue.collidepoint(x_pos, y_pos):
-                g_map = import_map()
-                value_height = str(len(g_map))
-                value_width = str(len(g_map[0]))
-                layer = import_bottom_layer()
+                board.import_board()
+                value_height = str(board.height)
+                value_width = str(board.width)
                 mode = EDITOR
             elif mode == MENU and btn_new.collidepoint(x_pos, y_pos):
                 mode = SETTINGS
@@ -350,27 +231,20 @@ while True:
                 if int(value_width) > 4 and int(value_height) > 4:
                     active_input_width = False
                     active_input_height = False
-                    create_new_map(int(value_width), int(value_height))
-                    create_new_bottom_layer(int(value_width), int(value_height))
-                    g_map = import_map()
-                    layer = import_bottom_layer()
+                    board.width = int(value_width)
+                    board.height = int(value_height)
+                    board.create_new_board(board.path_map)
+                    board.create_new_board(board.path_layer)
+                    board.import_board()
                     mode = EDITOR
                 else:
                     value_width = "5"
                     value_height = "5"
                     ctypes.windll.user32.MessageBoxW(0, "Minimum size is 5x5!", "WARNING!!!", 0x0 | 0x30)
-                    #easygui.msgbox("Lorem ipsum", "title", "okay")
         elif event.type == MOUSEBUTTONUP:
             mouse = False
     keys = pygame.key.get_pressed()
-    if keys[K_d]:
-        move_x -= 32
-    elif keys[K_a]:
-        move_x += 32
-    elif keys[K_w]:
-        move_y += 32
-    elif keys[K_s]:
-        move_y -= 32
+    board.move(keys)
     if keys[K_DOWN]:
         swipe += 1
         if swipe >= (len(tiles) // 19) - 13:
@@ -380,14 +254,7 @@ while True:
         if swipe < 0:
             swipe = 0
     if mouse and not opened_menu and mode == EDITOR:
-        x = int((x_pos - move_x) / 32)
-        y = int((y_pos - move_y) / 32)
-        if 0 <= y <= int(value_height) - 1 and 0 <= x <= int(value_width) - 1:
-            if choosed_layer == 1:
-                g_map[y][x] = choosed_tile
-            else:
-                layer[y][x] = choosed_tile
-
+        board.update_tile(x_pos, y_pos)
 
 
     pygame.display.update()
