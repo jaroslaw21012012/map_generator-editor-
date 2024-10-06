@@ -57,12 +57,13 @@ class Map:
             for x in range(self.width):
                 left = self.move_x + x * 32
                 top = self.move_y + y * 32
-                if self.map[y][x] != -1:
-                    tile = tiles[self.map[y][x]]
-                    self.display.blit(tile, pygame.Rect(left, top, 32, 32))
-                if self.layer[y][x] != -1:
-                    tile = tiles[self.layer[y][x]]
-                    self.display.blit(tile, pygame.Rect(left, top, 32, 32))
+                if 0 <= left <= 800 and 0 <= top <= 600:
+                    if self.map[y][x] != -1:
+                        tile = tiles[self.map[y][x]]
+                        self.display.blit(tile, pygame.Rect(left, top, 32, 32))
+                    if self.layer[y][x] != -1:
+                        tile = tiles[self.layer[y][x]]
+                        self.display.blit(tile, pygame.Rect(left, top, 32, 32))
 
     def move(self, keys):
         if keys[K_d]:
@@ -113,3 +114,60 @@ class Menu:
                 top = 52 + i * 32 + i * 5
                 blocks.append(pygame.Rect(left, top, 32, 32))
         return blocks
+
+class Button:
+    def __init__(self, text:str, rect:Rect, color:tuple, font_name:str, font_size:int):
+        self.rect = rect
+        self.font = pygame.font.Font(font_name, font_size)
+        self.text = self.font.render(text, True, color)
+        self.text_rect = self.text.get_rect()
+        self.text_rect.center = self.rect.center
+
+    def draw(self, display, bg):
+        pygame.draw.rect(display, bg, self.rect, border_radius=5)
+        display.blit(self.text, self.text_rect)
+
+    def is_pressed(self, x, y):
+        if self.rect.collidepoint(x, y):
+            return True
+        return False
+
+
+class Input:
+    def __init__(self, rect:Rect, color_text:tuple, color_bg:tuple, label:str, font:str, main_font_size:int, label_font_size:int):
+        self.rect = rect
+        self.color_bg = color_bg
+        self.color_text = color_text
+        self.main_font = pygame.font.Font(font, main_font_size)
+        self.label_font = pygame.font.Font(font, label_font_size)
+        self.label_text = self.label_font.render(label, True, self.color_text)
+        self.label_rect = self.label_text.get_rect()
+        self.label_rect.top = self.rect.top - 20
+        self.label_rect.left = self.rect.left + 5
+
+        self.input = self.main_font.render("299", True, self.color_text)
+        self.input_rect = self.input.get_rect()
+        self.input_rect.center = self.input_rect.center
+
+        self.active = False
+
+
+        #input_width = pygame.Rect(150, 300, 200, 50)
+        #input_width_text = btn_font.render(f"{value_width}", True, BLACK)
+        #input_width_text_rect = input_width_text.get_rect()
+        #input_width_text_rect.center = input_width.center
+
+        #label_width = label_font.render("Enter count of blocks for width:", True, BLACK)
+        #label_width_rect = label_width.get_rect()
+        #label_width_rect.top = input_width.top - 20
+        #label_width_rect.left = input_width.left + 5
+
+    def draw(self, display, value):
+        self.input = self.main_font.render(str(value), True, self.color_text)
+        pygame.draw.rect(display, self.color_bg, self.rect, border_radius=5)
+        display.blit(self.input, self.input_rect)
+        display.blit(self.label_text, self.label_rect)
+    def is_pressed(self, x, y):
+        if self.rect.collidepoint(x, y):
+            return True
+        return False
