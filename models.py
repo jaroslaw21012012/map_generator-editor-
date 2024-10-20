@@ -116,7 +116,7 @@ class Menu:
         return blocks
 
 class Button:
-    def __init__(self, text:str, rect:Rect, color:tuple, font_name:str, font_size:int):
+    def __init__(self, text:str, rect:pygame.Rect, color:tuple, font_name:str, font_size:int):
         self.rect = rect
         self.font = pygame.font.Font(font_name, font_size)
         self.text = self.font.render(text, True, color)
@@ -134,12 +134,13 @@ class Button:
 
 
 class Input:
-    def __init__(self, rect:Rect, color_text:tuple, color_bg:tuple, label:str, font:str, main_font_size:int, label_font_size:int):
+    def __init__(self, rect:pygame.Rect, color_text:tuple, color_bg:tuple, label:str, font:str, main_font_size:int, label_font_size:int):
         self.rect = rect
         self.color_bg = color_bg
         self.color_text = color_text
         self.main_font = pygame.font.Font(font, main_font_size)
         self.label_font = pygame.font.Font(font, label_font_size)
+
         self.label_text = self.label_font.render(label, True, self.color_text)
         self.label_rect = self.label_text.get_rect()
         self.label_rect.top = self.rect.top - 20
@@ -147,20 +148,11 @@ class Input:
 
         self.input = self.main_font.render("299", True, self.color_text)
         self.input_rect = self.input.get_rect()
-        self.input_rect.center = self.input_rect.center
+        self.input_rect.center = self.rect.center
 
         self.active = False
 
 
-        #input_width = pygame.Rect(150, 300, 200, 50)
-        #input_width_text = btn_font.render(f"{value_width}", True, BLACK)
-        #input_width_text_rect = input_width_text.get_rect()
-        #input_width_text_rect.center = input_width.center
-
-        #label_width = label_font.render("Enter count of blocks for width:", True, BLACK)
-        #label_width_rect = label_width.get_rect()
-        #label_width_rect.top = input_width.top - 20
-        #label_width_rect.left = input_width.left + 5
 
     def draw(self, display, value):
         self.input = self.main_font.render(str(value), True, self.color_text)
